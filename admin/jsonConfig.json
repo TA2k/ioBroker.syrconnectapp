@@ -5,17 +5,17 @@
     "username": {
       "type": "text",
       "label": {
-        "en": "App Email",
-        "de": "App-E-Mail",
-        "ru": "Электронная почта приложения",
-        "pt": "Email do aplicativo",
-        "nl": "App-e-mail",
-        "fr": "Courriel de l'application",
-        "it": "E-mail dell'app",
-        "es": "Correo electrónico de la aplicación",
-        "pl": "E-mail aplikacji",
-        "uk": "Електронна пошта додатка",
-        "zh-cn": "应用电子邮件"
+        "en": "App Username",
+        "de": "App-Benutzername",
+        "ru": "Имя пользователя приложения",
+        "pt": "Nome de usuário do aplicativo",
+        "nl": "App-gebruikersnaam",
+        "fr": "Nom d'utilisateur de l'application",
+        "it": "Nome utente dell'app",
+        "es": "Nombre de usuario de la aplicación",
+        "pl": "Nazwa użytkownika aplikacji",
+        "uk": "Ім'я користувача додатка",
+        "zh-cn": "应用用户名"
       },
       "newLine": true,
       "xs": 12,
