@@ -11,6 +11,7 @@ const axios = require('axios').default;
 const Json2iob = require('json2iob');
 const crypto = require('crypto');
 const Checksum = require('./lib/checksum');
+const description = require('./lib/description');
 
 const convert = require('xml-js');
 
@@ -247,6 +248,7 @@ class Syrconnectapp extends utils.Adapter {
               preferedArrayName: 'n',
               channelName: 'Status',
               write: true,
+              descriptions: description,
             });
           } catch (error) {
             this.log.error('Failed to parse response');
@@ -365,6 +367,7 @@ class Syrconnectapp extends utils.Adapter {
               preferedArrayName: 'n',
               channelName: 'Status',
               write: true,
+              descriptions: description,
             });
           })
           .catch((error) => {
