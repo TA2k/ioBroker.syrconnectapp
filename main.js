@@ -54,7 +54,6 @@ class Syrconnectapp extends utils.Adapter {
     this.subscribeStates('*');
     this.log.info('Get projects and devices');
     await this.getProjects();
-    await this.getDeviceList();
     await this.updateDevices();
     this.updateInterval = setInterval(async () => {
       await this.updateDevices();
@@ -67,11 +66,11 @@ class Syrconnectapp extends utils.Adapter {
   async getProjects() {
     //create timestamp format YYYY-MM-DD HH:MM:SS
     const timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    const payload = `<nfo v="SYR Connect" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
+    let payload = `<nfo v="SYR Connect" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://syrconnectapp.de/WebServices/Api/SyrApiService.svc/REST/GetProjects',
+      url: 'https://syrconnect.de/WebServices/Api/SyrApiService.svc/REST/GetProjects',
       headers: {
         'Content-Type': 'text/xml',
         Connection: 'keep-alive',
@@ -83,9 +82,7 @@ class Syrconnectapp extends utils.Adapter {
     })
       .then(async (res) => {
         this.log.debug(JSON.stringify(res.data));
-        const encryptedXml = JSON.parse(
-          convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true, alwaysArray: true }),
-        );
+        const encryptedXml = JSON.parse(convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true }));
 
         const decrypted = this.decryptPayload(encryptedXml.sc.api._text);
         this.log.debug(decrypted);
@@ -93,7 +90,6 @@ class Syrconnectapp extends utils.Adapter {
           compact: true,
           spaces: 2,
           nativeTypeAttributes: true,
-          alwaysArray: true,
         });
         const parsedJSON = JSON.parse(convertedJson);
         this.log.debug(parsedJSON);
@@ -112,7 +108,7 @@ class Syrconnectapp extends utils.Adapter {
           const id = project.id;
           const name = project.n;
 
-          await this.setObjectNotExistsAsync(id, {
+          await this.extendObject(id, {
             type: 'device',
             common: {
               name: name,
@@ -120,8 +116,8 @@ class Syrconnectapp extends utils.Adapter {
             native: {},
           });
 
-          this.json2iob.parse(id, project, { forceIndex: true });
-          this.getDeviceList(id);
+          this.json2iob.parse(id + '.general', project, { forceIndex: true, channelName: 'General Information' });
+          await this.getDeviceList(id);
         }
       })
       .catch((error) => {
@@ -130,17 +126,17 @@ class Syrconnectapp extends utils.Adapter {
       });
   }
   async getDeviceList(projectId) {
-    const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs></sc>`;
+    let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs></sc>`;
     this.checksum.resetChecksum();
     this.checksum.addXmlToChecksum(payload);
     const checksum = this.checksum.getChecksum();
-    payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
+    payload = payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://syrconnectapp.de/WebServices/SyrControlWebServiceTest2.asmx/GetProjectDeviceCollections',
+      url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetProjectDeviceCollections',
       headers: {
-        Host: 'syrconnectapp.de',
+        Host: 'syrconnect.de',
         'Content-Type': 'application/x-www-form-urlencoded',
         Connection: 'keep-alive',
         Accept: '*/*',
@@ -154,7 +150,7 @@ class Syrconnectapp extends utils.Adapter {
       .then(async (res) => {
         this.log.debug(JSON.stringify(res.data));
 
-        const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true, alwaysArray: true });
+        const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
         this.log.debug(convertedJson);
         const jsonParsed = JSON.parse(convertedJson);
         // this.log.info(`Found ${json.prs} devices`);
@@ -165,20 +161,21 @@ class Syrconnectapp extends utils.Adapter {
           deviceArray = [jsonParsed.sc.dvs];
         }
         this.log.info(`Found ${deviceArray.length} devices in project ${projectId}`);
-        for (const device of deviceArray) {
-          const id = device.sn;
+        for (let device of deviceArray) {
+          device = device.d._attributes;
+          const id = device.dclg;
 
-          this.deviceArray.push(id);
+          this.deviceArray.push({ id: device.dclg, pg: projectId });
           const name = device.dfw;
 
-          await this.setObjectNotExistsAsync(projectId + '.' + id, {
+          await this.extendObject(projectId + '.' + id, {
             type: 'device',
             common: {
               name: name,
             },
             native: {},
           });
-          await this.setObjectNotExistsAsync(projectId + '.' + id + '.remote', {
+          await this.extendObject(projectId + '.' + id + '.remote', {
             type: 'channel',
             common: {
               name: 'Remote Controls',
@@ -188,20 +185,20 @@ class Syrconnectapp extends utils.Adapter {
 
           const remoteArray = [{ command: 'Refresh', name: 'True = Refresh' }];
           remoteArray.forEach((remote) => {
-            this.setObjectNotExists(id + '.remote.' + remote.command, {
+            this.extendObject(projectId + '.' + id + '.remote.' + remote.command, {
               type: 'state',
               common: {
                 name: remote.name || '',
                 type: remote.type || 'boolean',
                 role: remote.role || 'boolean',
-                def: remote.def || false,
+                def: remote.def == null ? false : remote.def,
                 write: true,
                 read: true,
               },
               native: {},
             });
           });
-          this.json2iob.parse(projectId + '.' + id, device, { forceIndex: true });
+          this.json2iob.parse(projectId + '.' + id + '.info', device, { forceIndex: true, channelName: 'Information' });
         }
       })
       .catch((error) => {
@@ -211,18 +208,19 @@ class Syrconnectapp extends utils.Adapter {
       });
   }
   async updateDevices() {
-    for (const id of this.deviceArray) {
-      const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1" /></col></sc>`;
+    for (const device of this.deviceArray) {
+      this.log.debug('Update device: ' + device.id);
+      let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}" fref="1" /></col></sc>`;
       this.checksum.resetChecksum();
       this.checksum.addXmlToChecksum(payload);
       const checksum = this.checksum.getChecksum();
-      payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
+      payload = payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
       await this.requestClient({
         method: 'post',
         maxBodyLength: Infinity,
-        url: 'https://syrconnectapp.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
+        url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
         headers: {
-          Host: 'syrconnectapp.de',
+          Host: 'syrconnect.de',
           'Content-Type': 'application/x-www-form-urlencoded',
           Connection: 'keep-alive',
           Accept: '*/*',
@@ -235,12 +233,26 @@ class Syrconnectapp extends utils.Adapter {
       })
         .then(async (res) => {
           this.log.debug(JSON.stringify(res.data));
-
-          const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true, alwaysArray: true });
-          this.log.debug(convertedJson);
-          const jsonParsed = JSON.parse(convertedJson);
-          const projectId = jsonParsed.sc.dcl.dclg;
-          this.json2iob.parse(projectId + '.' + id, res.data, { forceIndex: true });
+          try {
+            const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
+            this.log.debug(convertedJson);
+            let jsonParsed = JSON.parse(convertedJson);
+            if (jsonParsed.sc.msg) {
+              this.log.error(JSON.stringify(jsonParsed.sc.msg));
+              return;
+            }
+            delete jsonParsed.cs;
+            this.replaceAttributesTagWithChildren(jsonParsed.sc);
+            this.json2iob.parse(device.pg + '.' + device.id + '.status', jsonParsed.sc, {
+              preferedArrayName: 'n',
+              channelName: 'Status',
+              write: true,
+            });
+          } catch (error) {
+            this.log.error('Failed to parse response');
+            this.log.error(error);
+            this.log.error(error.stack);
+          }
         })
         .catch((error) => {
           this.log.error('Failed to get device list');
@@ -249,7 +261,19 @@ class Syrconnectapp extends utils.Adapter {
         });
     }
   }
-
+  replaceAttributesTagWithChildren(json) {
+    //replace attributes tag with children
+    for (const key in json) {
+      if (key === '_attributes') {
+        for (const attribute in json[key]) {
+          json[attribute] = json[key][attribute];
+        }
+        delete json[key];
+      } else if (typeof json[key] === 'object') {
+        this.replaceAttributesTagWithChildren(json[key]);
+      }
+    }
+  }
   encryptPayload(payload) {
     const cypher = crypto.createCipheriv('aes-256-cbc', this.key, this.iv);
     return cypher.update(payload, 'utf8', 'base64');
@@ -285,10 +309,12 @@ class Syrconnectapp extends utils.Adapter {
   async onStateChange(id, state) {
     if (state) {
       if (!state.ack) {
-        // const deviceId = id.split('.')[2];
-        const command = id.split('.')[4];
-        if (id.split('.')[3] !== 'remote') {
-          return;
+        const projectId = id.split('.')[2];
+        const deviceId = id.split('.')[3];
+        let command = id.split('.')[5];
+        if (id.split('.')[4] !== 'remote') {
+          const length = id.split('.').length;
+          command = id.split('.')[length - 1];
         }
 
         if (command === 'Refresh') {
@@ -296,18 +322,23 @@ class Syrconnectapp extends utils.Adapter {
           return;
         }
         //n="setAB" v="1"
-        const value = state.val === true ? '1' : '0';
-        const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1"><c n="${command}" v="${value}" /></dcl></col></sc>`;
+        let value = state.val;
+        if (state.val === true || state.val === false) {
+          value = state.val ? 1 : 0;
+        }
+
+        command = command.replace('get', 'set');
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${deviceId}" fref="1"><c n="${command}" v="${value}" /></dcl></col></sc>`;
         this.checksum.resetChecksum();
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
-        payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
+        payload = payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
-          url: 'https://syrconnectapp.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
+          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
           headers: {
-            Host: 'syrconnectapp.de',
+            Host: 'syrconnect.de',
             'Content-Type': 'application/x-www-form-urlencoded',
             Connection: 'keep-alive',
             Accept: '*/*',
@@ -324,8 +355,17 @@ class Syrconnectapp extends utils.Adapter {
             const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true, alwaysArray: true });
             this.log.debug(convertedJson);
             const jsonParsed = JSON.parse(convertedJson);
-            const projectId = jsonParsed.sc.dcl.dclg;
-            this.json2iob.parse(projectId + '.' + id, res.data, { forceIndex: true });
+            if (jsonParsed.sc.msg) {
+              this.log.error(JSON.stringify(jsonParsed.sc.msg));
+              return;
+            }
+            delete jsonParsed.cs;
+            this.replaceAttributesTagWithChildren(jsonParsed.sc);
+            this.json2iob.parse(projectId + '.' + deviceId + '.status', jsonParsed.sc, {
+              preferedArrayName: 'n',
+              channelName: 'Status',
+              write: true,
+            });
           })
           .catch((error) => {
             this.log.error('Failed to set command: ' + command);
