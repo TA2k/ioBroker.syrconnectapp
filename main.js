@@ -10,6 +10,7 @@ const utils = require('@iobroker/adapter-core');
 const axios = require('axios').default;
 const Json2iob = require('json2iob');
 const crypto = require('crypto');
+const Checksum = require('./lib/checksum');
 
 const convert = require('xml-js');
 
@@ -30,6 +31,7 @@ class Syrconnectapp extends utils.Adapter {
     this.requestClient = axios.create({});
     this.key = Buffer.from('d805a5c409dc354b6ccf03a2c29a5825851cf31979abf526ede72570c52cf954', 'hex');
     this.iv = Buffer.from('408a42beb8a1cefad990098584ed51a5', 'hex');
+    this.checksum = new Checksum('L8KZG4F5DSM6ANBV3CXY7W2ER1T9H0UP', 'KHGK5X29LVNZU56T');
   }
 
   /**
@@ -128,6 +130,11 @@ class Syrconnectapp extends utils.Adapter {
       });
   }
   async getDeviceList(projectId) {
+    const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs></sc>`;
+    this.checksum.resetChecksum();
+    this.checksum.addXmlToChecksum(payload);
+    const checksum = this.checksum.getChecksum();
+    payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
@@ -141,7 +148,7 @@ class Syrconnectapp extends utils.Adapter {
         'Accept-Language': 'de-DE,de;q=0.9',
       },
       data: {
-        xml: `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs><cs v="11F2B"/></sc>`,
+        xml: payload,
       },
     })
       .then(async (res) => {
@@ -205,6 +212,11 @@ class Syrconnectapp extends utils.Adapter {
   }
   async updateDevices() {
     for (const id of this.deviceArray) {
+      const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1" /></col></sc>`;
+      this.checksum.resetChecksum();
+      this.checksum.addXmlToChecksum(payload);
+      const checksum = this.checksum.getChecksum();
+      payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
       await this.requestClient({
         method: 'post',
         maxBodyLength: Infinity,
@@ -218,7 +230,7 @@ class Syrconnectapp extends utils.Adapter {
           'Accept-Language': 'de-DE,de;q=0.9',
         },
         data: {
-          xml: `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1" /></col><cs v="11FA9"/></sc>`,
+          xml: payload,
         },
       })
         .then(async (res) => {
@@ -285,6 +297,11 @@ class Syrconnectapp extends utils.Adapter {
         }
         //n="setAB" v="1"
         const value = state.val === true ? '1' : '0';
+        const payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1"><c n="${command}" v="${value}" /></dcl></col></sc>`;
+        this.checksum.resetChecksum();
+        this.checksum.addXmlToChecksum(payload);
+        const checksum = this.checksum.getChecksum();
+        payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
@@ -298,7 +315,7 @@ class Syrconnectapp extends utils.Adapter {
             'Accept-Language': 'de-DE,de;q=0.9',
           },
           data: {
-            xml: `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${id}" fref="1"><c n="${command}" v="${value}" /></dcl></col><cs v="12025"/></sc>`,
+            xml: payload,
           },
         })
           .then(async (res) => {
