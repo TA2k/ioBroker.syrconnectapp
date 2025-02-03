@@ -67,7 +67,7 @@ class Syrconnectapp extends utils.Adapter {
   async getProjects() {
     //create timestamp format YYYY-MM-DD HH:MM:SS
     const timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    let payload = `<nfo v="SYR Connect" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
+    const payload = `<nfo v="SYR Connect" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
@@ -237,7 +237,7 @@ class Syrconnectapp extends utils.Adapter {
           try {
             const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
             this.log.debug(convertedJson);
-            let jsonParsed = JSON.parse(convertedJson);
+            const jsonParsed = JSON.parse(convertedJson);
             if (jsonParsed.sc.msg) {
               this.log.error(JSON.stringify(jsonParsed.sc.msg));
               return;
