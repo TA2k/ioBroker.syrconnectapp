@@ -12,6 +12,7 @@ const Json2iob = require('json2iob');
 const crypto = require('crypto');
 const Checksum = require('./lib/checksum');
 const description = require('./lib/description');
+const units = require('./lib/units');
 
 const convert = require('xml-js');
 
@@ -184,7 +185,14 @@ class Syrconnectapp extends utils.Adapter {
             native: {},
           });
 
-          const remoteArray = [{ command: 'Refresh', name: 'True = Refresh' }];
+          const remoteArray = [
+            { command: 'Refresh', name: 'True = Refresh' },
+            { command: 'setSIR', name: 'Regenerate now' },
+            { command: 'setSDR', name: 'Regenerate later' },
+            { command: 'setSMR', name: 'Multi regenerate' },
+            { command: 'setRST', name: 'Reset device' },
+            { command: 'setCFG', name: 'Apply configuration' },
+          ];
           remoteArray.forEach((remote) => {
             this.extendObject(projectId + '.' + id + '.remote.' + remote.command, {
               type: 'state',
@@ -249,6 +257,7 @@ class Syrconnectapp extends utils.Adapter {
               channelName: 'Status',
               write: true,
               descriptions: description,
+              units: units,
             });
           } catch (error) {
             this.log.error('Failed to parse response');
@@ -368,6 +377,7 @@ class Syrconnectapp extends utils.Adapter {
               channelName: 'Status',
               write: true,
               descriptions: description,
+              units: units,
             });
           })
           .catch((error) => {
