@@ -28,6 +28,7 @@
       "type": "password",
       "repeat": false,
       "visible": true,
+      "newLine": true,
       "xs": 12,
       "sm": 12,
       "md": 6,
@@ -50,6 +51,7 @@
 
     "interval": {
       "type": "number",
+      "newLine": true,
       "min": 1,
       "xs": 12,
       "sm": 12,
