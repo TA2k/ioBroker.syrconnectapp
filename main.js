@@ -344,6 +344,8 @@ class Syrconnectapp extends utils.Adapter {
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
         payload = payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
+        this.log.debug('Send command: ' + command + ' with value: ' + value);
+        this.log.debug('Payload: ' + payload);
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
