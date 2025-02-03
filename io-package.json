@@ -1,0 +1,114 @@
+{
+  "common": {
+    "name": "syrconnectapp",
+    "version": "2.0.0",
+    "news": {
+      "2.0.0": {
+        "en": "initial release",
+        "de": "Erstveröffentlichung",
+        "ru": "Начальная версия",
+        "pt": "lançamento inicial",
+        "nl": "Eerste uitgave",
+        "fr": "Première version",
+        "it": "Versione iniziale",
+        "es": "Versión inicial",
+        "pl": "Pierwsze wydanie",
+        "uk": "Початкова версія",
+        "zh-cn": "首次出版"
+      }
+    },
+    "titleLang": {
+      "en": "SYR Connect",
+      "de": "SYR Connect",
+      "ru": "Syr Connect",
+      "pt": "Syr Connect",
+      "nl": "Syr verbindt",
+      "fr": "Syr Connect",
+      "it": "Syr Connect",
+      "es": "SYR Connect",
+      "pl": "SYR Connect",
+      "uk": "Syr Connect",
+      "zh-cn": "SYR连接"
+    },
+    "desc": {
+      "en": "Adapter for SYR Connect App",
+      "de": "Adapter für SYR Connect App",
+      "ru": "Адаптер для приложения Syr Connect",
+      "pt": "Adaptador para aplicativo SYR Connect",
+      "nl": "Adapter voor SYR Connect -app",
+      "fr": "Adaptateur pour l'application SYR Connect",
+      "it": "Adattatore per l'app Syr Connect",
+      "es": "Adaptador para la aplicación SYR Connect",
+      "pl": "Adapter dla SYR Connect App",
+      "uk": "Адаптер для додатка Syr Connect",
+      "zh-cn": "Syr Connect应用程序的适配器"
+    },
+    "authors": ["TA2k <tombox2020@gmail.com>"],
+    "keywords": ["syr connect"],
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
+    "platform": "Javascript/Node.js",
+    "icon": "syrconnectapp.png",
+    "enabled": true,
+    "extIcon": "https://raw.githubusercontent.com/TA2k/ioBroker.syrconnectapp/main/admin/syrconnectapp.png",
+    "readme": "https://github.com/TA2k/ioBroker.syrconnectapp/blob/main/README.md",
+    "loglevel": "info",
+    "tier": 3,
+    "mode": "daemon",
+    "type": "household",
+    "compact": true,
+    "connectionType": "cloud",
+    "dataSource": "poll",
+    "adminUI": {
+      "config": "json"
+    },
+    "plugins": {
+      "sentry": {
+        "dsn": "https://c9bd6c851b1246da95e6e982aa9b88f3@sentry.iobroker.net/152"
+      }
+    },
+    "dependencies": [
+      {
+        "js-controller": ">=7.0.4"
+      }
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.0.23"
+      }
+    ]
+  },
+  "encryptedNative": ["password"],
+  "protectedNative": ["password"],
+  "native": {
+    "username": "",
+    "password": "",
+    "interval": 10
+  },
+  "objects": [],
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "role": "indicator.connected",
+        "name": "Device or service connected",
+        "type": "boolean",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ]
+}
