@@ -1,6 +1,6 @@
 {
     "name": "iobroker.syrconnectapp",
-    "version": "2.0.0",
+    "version": "1.0.0",
     "description": "Adapter for SYR Connect App",
     "author": {
         "name": "TA2k",
