@@ -365,7 +365,7 @@ class Syrconnectapp extends utils.Adapter {
           .then(async (res) => {
             this.log.debug(JSON.stringify(res.data));
 
-            const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true, alwaysArray: true });
+            const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
             this.log.debug(convertedJson);
             const jsonParsed = JSON.parse(convertedJson);
             if (jsonParsed.sc.msg) {
