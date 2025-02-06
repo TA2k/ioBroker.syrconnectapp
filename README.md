@@ -23,13 +23,25 @@ syrconnectapp.0.project.deviceid.status
 
 Enter SYR Connect App Login information
 
-**Steuern**
-syconnect.0.project.deviceid.remote set to true for the commands
+**Control**
+
+syconnect.0.project.deviceid.remote
+
+set to true for the commands
+
+and
 
 syrconnect.0.project.deviceId.status.dvs.d.c.
 
+#### Examples:
+
 syrconnectapp.0.XXXXX.XXXXX.status.dvs.d.c.getAB
+
 set to 2 to close the valve
+
+syrconnectapp.0.XXXXX.XXXXX.status.dvs.d.c.getPRF
+
+to set the profile to absence or present
 
 ## Changelog
 
