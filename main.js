@@ -266,6 +266,7 @@ class Syrconnectapp extends utils.Adapter {
               return;
             }
             delete jsonParsed.cs;
+            delete jsonParsed.sc.cs;
             this.replaceAttributesTagWithChildren(jsonParsed.sc);
             this.json2iob.parse(device.pg + '.' + device.id + '.status', jsonParsed.sc, {
               preferedArrayName: 'n',
@@ -329,9 +330,11 @@ class Syrconnectapp extends utils.Adapter {
                 return;
               }
               delete jsonParsed.cs;
+              delete jsonParsed.sc.cs;
               this.replaceAttributesTagWithChildren(jsonParsed.sc);
               this.json2iob.parse(device.pg + '.' + device.id + '.statistic.' + statisticPayload.name, jsonParsed.sc, {
                 preferedArrayName: 'n',
+                forceIndex: true,
                 channelName: 'Statistic',
                 write: true,
                 descriptions: description,
@@ -452,6 +455,7 @@ class Syrconnectapp extends utils.Adapter {
               return;
             }
             delete jsonParsed.cs;
+            delete jsonParsed.sc.cs;
             this.replaceAttributesTagWithChildren(jsonParsed.sc);
             this.json2iob.parse(projectId + '.' + deviceId + '.status', jsonParsed.sc, {
               preferedArrayName: 'n',
