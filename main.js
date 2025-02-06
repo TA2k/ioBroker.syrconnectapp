@@ -185,6 +185,13 @@ class Syrconnectapp extends utils.Adapter {
             },
             native: {},
           });
+          await this.extendObject(projectId + '.' + id + '.statistic', {
+            type: 'channel',
+            common: {
+              name: 'Statistic of the device',
+            },
+            native: {},
+          });
           await this.extendObject(projectId + '.' + id + '.remote', {
             type: 'channel',
             common: {
