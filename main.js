@@ -57,9 +57,17 @@ class Syrconnectapp extends utils.Adapter {
     this.log.info('Get projects and devices');
     await this.getProjects();
     await this.updateDevices();
+    await this.getStatistics();
+
     this.updateInterval = setInterval(async () => {
       await this.updateDevices();
     }, this.config.interval * 60 * 1000);
+
+    this.log.info;
+    ('Statistics fetched every 3 hour');
+    this.statisticInterval = this.setInterval(async () => {
+      await this.getStatistics();
+    }, 1000 * 60 * 60 * 3);
     //every 1 week
     this.refreshTokenInterval = setInterval(async () => {
       await this.getProjects();
@@ -270,6 +278,70 @@ class Syrconnectapp extends utils.Adapter {
           this.log.error(error);
           error.response && this.log.error(JSON.stringify(error.response.data));
         });
+    }
+  }
+  async getStatistics() {
+    for (const device of this.deviceArray) {
+      this.log.debug('Get Statistics device: ' + device.id);
+
+      const statisticPayloadArray = [
+        { name: 'Salz', payload: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
+        { name: 'Wasser', payload: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
+      ];
+      for (const statisticPayload of statisticPayloadArray) {
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}"></dcl></col></sc>`;
+        payload = payload.replace('</dcl>', statisticPayload.payload + '</dcl>');
+        this.checksum.resetChecksum();
+        this.checksum.addXmlToChecksum(payload);
+        const checksum = this.checksum.getChecksum();
+        payload = payload.replace('</sc>', `<cs v="${checksum}"/></sc>`);
+        await this.requestClient({
+          method: 'post',
+          maxBodyLength: Infinity,
+          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
+          headers: {
+            Host: 'syrconnect.de',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Connection: 'keep-alive',
+            Accept: '*/*',
+            'User-Agent': 'SYR/400 CFNetwork/1335.0.3.4 Darwin/21.6.0',
+            'Accept-Language': 'de-DE,de;q=0.9',
+          },
+          data: {
+            xml: payload,
+          },
+        })
+          .then(async (res) => {
+            this.log.debug(JSON.stringify(res.data));
+            try {
+              const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
+              this.log.debug(convertedJson);
+              const jsonParsed = JSON.parse(convertedJson);
+              if (jsonParsed.sc.msg) {
+                this.log.error(JSON.stringify(jsonParsed.sc.msg));
+                return;
+              }
+              delete jsonParsed.cs;
+              this.replaceAttributesTagWithChildren(jsonParsed.sc);
+              this.json2iob.parse(device.pg + '.' + device.id + '.statistic.' + statisticPayload.name, jsonParsed.sc, {
+                preferedArrayName: 'n',
+                channelName: 'Statistic',
+                write: true,
+                descriptions: description,
+                units: units,
+              });
+            } catch (error) {
+              this.log.error('Failed to parse response');
+              this.log.error(error);
+              this.log.error(error.stack);
+            }
+          })
+          .catch((error) => {
+            this.log.error('Failed to get statistics');
+            this.log.error(error);
+            error.response && this.log.error(JSON.stringify(error.response.data));
+          });
+      }
     }
   }
   replaceAttributesTagWithChildren(json) {
