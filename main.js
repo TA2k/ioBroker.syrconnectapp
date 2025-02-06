@@ -298,7 +298,7 @@ class Syrconnectapp extends utils.Adapter {
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
-          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
+          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetLexPlusStatistics',
           headers: {
             Host: 'syrconnect.de',
             'Content-Type': 'application/x-www-form-urlencoded',
