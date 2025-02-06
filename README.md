@@ -14,7 +14,7 @@
 
 ## syrconnectapp adapter for ioBroker
 
-Adapter for SYR Connect App
+Adapter for SYR Connect App. The adapter can fetch all information/statistics and can control all configuration of the syr connect device.
 
 Current Values:
 syrconnectapp.0.project.deviceid.status
@@ -50,7 +50,7 @@ to set the profile to absence or present
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 1.0.2 (2025-02-06)
 
 - (TA2k) initial release
 

@@ -1,20 +1,20 @@
 {
   "common": {
     "name": "syrconnectapp",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "news": {
-      "1.0.0": {
+      "1.0.2": {
         "en": "initial release",
         "de": "Erstveröffentlichung",
-        "ru": "Начальная версия",
+        "ru": "первоначальный выпуск",
         "pt": "lançamento inicial",
-        "nl": "Eerste uitgave",
-        "fr": "Première version",
-        "it": "Versione iniziale",
-        "es": "Versión inicial",
-        "pl": "Pierwsze wydanie",
-        "uk": "Початкова версія",
-        "zh-cn": "首次出版"
+        "nl": "eerste release",
+        "fr": "libération initiale",
+        "it": "rilascio iniziale",
+        "es": "liberación inicial",
+        "pl": "początkowe zwolnienie",
+        "uk": "початковий реліз",
+        "zh-cn": "初步释放"
       }
     },
     "titleLang": {
@@ -85,7 +85,7 @@
   "native": {
     "username": "",
     "password": "",
-    "interval": 10
+    "interval": 20
   },
   "objects": [],
   "instanceObjects": [

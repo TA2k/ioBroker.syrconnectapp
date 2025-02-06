@@ -64,10 +64,10 @@ class Syrconnectapp extends utils.Adapter {
     }, this.config.interval * 60 * 1000);
 
     this.log.info;
-    ('Statistics fetched every 3 hour');
+    ('Statistics fetched every 6 hour');
     this.statisticInterval = this.setInterval(async () => {
       await this.getStatistics();
-    }, 1000 * 60 * 60 * 3);
+    }, 1000 * 60 * 60 * 6);
     //every 1 week
     this.refreshTokenInterval = setInterval(async () => {
       await this.getProjects();
