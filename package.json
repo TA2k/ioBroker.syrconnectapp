@@ -9,7 +9,7 @@
   "homepage": "https://github.com/TA2k/ioBroker.syrconnectapp",
   "license": "MIT",
   "keywords": [
-    "syr connect, ioBroker"
+    "syr connect","ioBroker" 
   ],
   "repository": {
     "type": "git",
