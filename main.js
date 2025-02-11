@@ -325,6 +325,10 @@ class Syrconnectapp extends utils.Adapter {
               const convertedJson = convert.xml2json(res.data, { compact: true, spaces: 2, nativeTypeAttributes: true });
               this.log.debug(convertedJson);
               const jsonParsed = JSON.parse(convertedJson);
+              if (!jsonParsed.sc) {
+                this.log.debug('No statistics found for name: ' + statisticPayload.name);
+                return;
+              }
               if (jsonParsed.sc.msg) {
                 this.log.error(JSON.stringify(jsonParsed.sc.msg));
                 return;
@@ -341,7 +345,7 @@ class Syrconnectapp extends utils.Adapter {
                 units: units,
               });
             } catch (error) {
-              this.log.error('Failed to parse response');
+              this.log.error('Failed to parse statistics response');
               this.log.error(error);
               this.log.error(error.stack);
             }
