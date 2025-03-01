@@ -34,7 +34,7 @@
     "@iobroker/testing": "^5.0.3",
     "@types/node": "^22.13.1",
     "eslint": "^9.19.0",
-    "globals": "^15.14.0",
+    "globals": "^16.0.0",
     "typescript": "~5.7.3"
   },
   "main": "main.js",
