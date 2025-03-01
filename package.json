@@ -32,7 +32,7 @@
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
     "@iobroker/testing": "^5.0.3",
-    "@types/node": "^22.13.1",
+    "@types/node": "^22.13.7",
     "eslint": "^9.19.0",
     "globals": "^15.14.0",
     "typescript": "~5.7.3"
