@@ -102,7 +102,7 @@ class Syrconnectapp extends utils.Adapter {
           nativeTypeAttributes: true,
         });
         const parsedJSON = JSON.parse(convertedJson);
-        this.log.debug(parsedJSON);
+        this.log.debug(JSON.stringify(parsedJSON));
         this.session = parsedJSON.xml.usr._attributes;
         this.setState('info.connection', true, true);
         // this.log.info(`Found ${json.prs} devices`);
@@ -166,17 +166,34 @@ class Syrconnectapp extends utils.Adapter {
         // this.log.info(`Found ${json.prs} devices`);
         // if (Array.isArray(json.prs.pre)) {
         // test if pre is an array
-        let deviceArray = jsonParsed.sc.dvs;
-        if (!Array.isArray(jsonParsed.sc.dvs)) {
+        let deviceArray;
+
+        // Handle both cases: dvs.d as array (current API) or dvs as direct array (fallback)
+        if (jsonParsed.sc.dvs && jsonParsed.sc.dvs.d) {
+          // Case where devices are in dvs.d (current API structure)
+          deviceArray = jsonParsed.sc.dvs.d;
+          if (!Array.isArray(deviceArray)) {
+            deviceArray = [deviceArray];
+          }
+        } else if (Array.isArray(jsonParsed.sc.dvs)) {
+          // Fallback case where dvs is directly an array
+          deviceArray = jsonParsed.sc.dvs;
+        } else if (jsonParsed.sc.dvs) {
+          // Fallback case where dvs is a single object
           deviceArray = [jsonParsed.sc.dvs];
+        } else {
+          this.log.error('No devices found in API response');
+          return;
         }
+
         this.log.info(`Found ${deviceArray.length} devices in project ${projectId}`);
         for (let device of deviceArray) {
-          device = device.d._attributes;
-          const id = device.dclg;
+          // Handle the device attributes properly
+          const deviceAttrs = device._attributes || device;
+          const id = deviceAttrs.dclg;
 
-          this.deviceArray.push({ id: device.dclg, pg: projectId });
-          const name = device.dfw;
+          this.deviceArray.push({ id: deviceAttrs.dclg, pg: projectId });
+          const name = deviceAttrs.dfw;
 
           await this.extendObject(projectId + '.' + id, {
             type: 'device',
