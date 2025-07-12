@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "syrconnectapp",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "news": {
+      "1.0.3": {
+        "en": "fix device list for different api version",
+        "de": "fix geräteliste für verschiedene api-version",
+        "ru": "список устройств для различных версий api",
+        "pt": "corrigir a lista de dispositivos para uma versão diferente do api",
+        "nl": "fix apparaatlijst voor verschillende api-versie",
+        "fr": "correction de la liste des périphériques pour différentes versions api",
+        "it": "elenco dispositivo di correzione per versione api diversa",
+        "es": "lista de dispositivos para diferentes versiones api",
+        "pl": "lista urządzeń poprawiających dla różnych wersji api",
+        "uk": "фіксувати список пристроїв для різних версій",
+        "zh-cn": "不同 api 版本的固定设备列表"
+      },
       "1.0.2": {
         "en": "initial release",
         "de": "Erstveröffentlichung",
@@ -43,8 +56,12 @@
       "uk": "Адаптер для додатка Syr Connect",
       "zh-cn": "Syr Connect应用程序的适配器"
     },
-    "authors": ["TA2k <tombox2020@gmail.com>"],
-    "keywords": ["syr connect"],
+    "authors": [
+      "TA2k <tombox2020@gmail.com>"
+    ],
+    "keywords": [
+      "syr connect"
+    ],
     "licenseInformation": {
       "type": "free",
       "license": "MIT"
@@ -80,8 +97,12 @@
       }
     ]
   },
-  "encryptedNative": ["password"],
-  "protectedNative": ["password"],
+  "encryptedNative": [
+    "password"
+  ],
+  "protectedNative": [
+    "password"
+  ],
   "native": {
     "username": "",
     "password": "",

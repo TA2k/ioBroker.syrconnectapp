@@ -49,6 +49,9 @@ to set the profile to absence or present
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### 1.0.3 (2025-07-12)
+
+- fix device list for different api version
 
 ### 1.0.2 (2025-02-06)
 
