@@ -49,7 +49,7 @@ to set the profile to absence or present
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 1.0.4 (2026-05-17)
 
 - Fix: Alarm acknowledge before opening valve (send clrALA/setALA together with setAB in one request)
 - Auto-detect alarm clear method based on device type (getTYP >= 1100 uses set, older uses clr)
@@ -67,7 +67,7 @@ to set the profile to absence or present
 
 MIT License
 
-Copyright (c) 2025 TA2k <tombox2020@gmail.com>
+Copyright (c) 2026 TA2k <tombox2020@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

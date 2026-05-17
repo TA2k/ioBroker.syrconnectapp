@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "syrconnectapp",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "news": {
+      "1.0.4": {
+        "en": "Fix: Alarm acknowledge before opening valve (send clrALA/setALA together with setAB in one request)\nAuto-detect alarm clear method based on device type (getTYP >= 1100 uses set, older uses clr)\nAuto-detect correct statistics endpoint based on device type (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)",
+        "de": "Fix: Alarmbestätigung vor dem Öffnen des Ventils (senden clrALA/setALA zusammen mit setAB in einer Anfrage)\nAutomatische Erkennung korrekter Statistiken Endpunkt basierend auf Gerätetyp (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)",
+        "ru": "Исправление: сигнал тревоги перед открытием клапана (отправить clrALA/setALA вместе с setAB в одном запросе)\nМетод автоматического обнаружения сигнализации на основе типа устройства (getTYP >= 1100 использует набор, более старые использует clr)\nАвтообнаружить правильную конечную точку статистики на основе типа устройства (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo и т. Д.)",
+        "pt": "Corrigir: Alarme reconhecer antes de abrir a válvula (enviar clorALA/setALA juntamente com setAB em um pedido)\nDetectar automaticamente o método claro do alarme baseado no tipo de dispositivo (getTYP >= 1100 usa definido, usos mais antigos clr)\nDetectar automaticamente o endpoint de estatísticas corretas com base no tipo de dispositivo (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)",
+        "nl": "Fix: alarm bevestigen voor het openen van de klep (stuur clrala/setALA samen met setAB in één verzoek)\n\"Auto-detect\" methode op basis van apparaattype (getTYP > 1100 gebruikssets, oudere toepassingen clr)\nAuto-detect correcte statistieken eindpunt op basis van apparaat type (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, enz.)",
+        "fr": "Correction: alarme reconnaître avant l'ouverture de la valve (envoyer clrALA/setALA avec setAB dans une demande)\nAuto-détecter la méthode d'alarme claire basée sur le type de périphérique (getTYP >= 1100 utilise ensemble, l'ancienne utilise clr)\nDétecter automatiquement les paramètres statistiques corrects en fonction du type d'appareil (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)",
+        "it": "Fisso: Accensione di allarme prima dell'apertura della valvola (send clrALA/setALA insieme con setAB in una sola richiesta)\nAuto-rilevamento metodo chiaro di allarme basato sul tipo di dispositivo (getTYP >= 1100 utilizza set, usi più vecchi clr)\nRilevamento automatico delle statistiche corrette in base al tipo di dispositivo (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, ecc.)",
+        "es": "Fijación: Alarma reconocer antes de la válvula de apertura (enviar clrALA/setALA junto con setAB en una sola petición)\nMétodo de alarma de detección automática basado en el tipo de dispositivo (getTYP ю= 1100 usos set, usos antiguos clr)\nPunto final de estadísticas correcto de auto-detección basado en el tipo de dispositivo (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)",
+        "pl": "Fix: Alarm potwierdza przed otwarciem zaworu (wyślij CLRALA / setaLA wraz z setaB w jednym wniosku)\nAutodetekcja metody odczytu alarmu w oparciu o typ urządzenia (getTYP > = 1100 wykorzystuje zestaw, starszy używa clr)\nAutowykrywalny poprawny punkt końcowy statystyki w oparciu o typ urządzenia (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo itp.)",
+        "uk": "Виправлення: Визнання сигналу перед відкриттям клапана (подати clrALA/setALA разом з setAB в одному запиту)\nАвтоматично-детектурний сигнальний метод на основі типу пристрою (getTYP >= 1100 використовує набір, старший використовує clr)\nAuto-detect коректна статистика кінцевої точки на основі типу пристрою (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo та ін.)",
+        "zh-cn": "固定:在打开阀门前确认警报(在一次请求中发送clrALA/setALA与setAB一起发送)\n基于设备类型的自动检测警报清晰方法(GettyP QQ 1100 用途设定,旧用途 clr)\n基于设备类型(安全T,LexPlus,SafeTech,TrioLs,NeoSoft,MuCo等)的自动检测正确的统计端点"
+      },
       "1.0.3": {
         "en": "fix device list for different api version",
         "de": "fix geräteliste für verschiedene api-version",
