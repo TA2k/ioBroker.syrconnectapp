@@ -306,16 +306,19 @@ class Syrconnectapp extends utils.Adapter {
     }
   }
   async getStatistics() {
+    const baseUrl = 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/';
+
     for (const device of this.deviceArray) {
       this.log.debug('Get Statistics device: ' + device.id);
 
-      const statisticPayloadArray = [
-        { name: 'Salz', payload: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
-        { name: 'Wasser', payload: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
-      ];
-      for (const statisticPayload of statisticPayloadArray) {
-        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}"></dcl></col></sc>`;
-        payload = payload.replace('</dcl>', statisticPayload.payload + '</dcl>');
+      const statsConfig = await this.getStatisticsConfig(device);
+      if (!statsConfig) {
+        this.log.debug('No statistics config for device: ' + device.id);
+        continue;
+      }
+
+      for (const stat of statsConfig.payloads) {
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}">${stat.sh}</dcl></col></sc>`;
         this.checksum.resetChecksum();
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
@@ -323,7 +326,7 @@ class Syrconnectapp extends utils.Adapter {
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
-          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetLexPlusStatistics',
+          url: statsConfig.url.startsWith('http') ? statsConfig.url : baseUrl + statsConfig.url,
           headers: {
             Host: 'syrconnect.de',
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -343,7 +346,7 @@ class Syrconnectapp extends utils.Adapter {
               this.log.debug(convertedJson);
               const jsonParsed = JSON.parse(convertedJson);
               if (!jsonParsed.sc) {
-                this.log.debug('No statistics found for name: ' + statisticPayload.name);
+                this.log.debug('No statistics found for: ' + stat.name);
                 return;
               }
               if (jsonParsed.sc.msg) {
@@ -353,7 +356,7 @@ class Syrconnectapp extends utils.Adapter {
               delete jsonParsed.cs;
               delete jsonParsed.sc.cs;
               this.replaceAttributesTagWithChildren(jsonParsed.sc);
-              this.json2iob.parse(device.pg + '.' + device.id + '.statistic.' + statisticPayload.name, jsonParsed.sc, {
+              this.json2iob.parse(device.pg + '.' + device.id + '.statistic.' + stat.name, jsonParsed.sc, {
                 preferedArrayName: 'n',
                 forceIndex: true,
                 channelName: 'Statistic',
@@ -368,12 +371,103 @@ class Syrconnectapp extends utils.Adapter {
             }
           })
           .catch((error) => {
-            this.log.error('Failed to get statistics');
+            this.log.error('Failed to get statistics for: ' + stat.name);
             this.log.error(error);
             error.response && this.log.error(JSON.stringify(error.response.data));
           });
       }
     }
+  }
+  async getStatisticsConfig(device) {
+    const basePath = `${this.namespace}.${device.pg}.${device.id}.status.col.dcl`;
+    const typState = await this.getStateAsync(`${basePath}.getTYP`);
+    const deviceType = typState && typState.val ? parseInt(String(typState.val), 10) : 0;
+
+    if (deviceType >= 1500) {
+      return {
+        url: 'GetMuCoStatistics',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    if (deviceType >= 1200) {
+      return {
+        url: 'GetNeoSoftStatistics',
+        payloads: [
+          { name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
+          { name: 'Salz', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
+        ],
+      };
+    }
+    if (deviceType >= 1100) {
+      return {
+        url: 'GetTrioLsStatistics',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    if (deviceType >= 190) {
+      return {
+        url: 'GetDosingPumpStatistics',
+        payloads: [
+          { name: 'Dosierung', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="ml" />' },
+          { name: 'Wasser', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="l" />' },
+        ],
+      };
+    }
+    if (deviceType >= 180) {
+      return {
+        url: 'GetHygBoxStatistics',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    if (deviceType >= 160) {
+      return {
+        url: 'GetAllInOnePlusStatistics',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    if (deviceType >= 140) {
+      return {
+        url: 'GetSafeTechStatistics',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    if (deviceType >= 120) {
+      return {
+        url: 'GetSafeFloorStatistics',
+        payloads: [
+          { name: 'Temperatur', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="°C" />' },
+          { name: 'Feuchtigkeit', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="%" />' },
+        ],
+      };
+    }
+    if (deviceType >= 80) {
+      return {
+        url: 'GetLexPlusStatistics',
+        payloads: [
+          { name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
+          { name: 'Salz', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
+        ],
+      };
+    }
+    if (deviceType >= 40) {
+      return {
+        url: 'https://syrconnect.de/WebServices/SyrConnectLimexWebService.asmx/GetSaltConsumption',
+        payloads: [
+          { name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
+          { name: 'Salz', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
+        ],
+      };
+    }
+    if (deviceType >= 20) {
+      return {
+        url: 'GetFillingVolumeConsumption',
+        payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+      };
+    }
+    return {
+      url: 'GetWaterConsumption',
+      payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
+    };
   }
   replaceAttributesTagWithChildren(json) {
     //replace attributes tag with children
