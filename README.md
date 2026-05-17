@@ -49,6 +49,11 @@ to set the profile to absence or present
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- Fix: Alarm acknowledge before opening valve (send clrALA/setALA together with setAB in one request)
+- Auto-detect alarm clear method based on device type (getTYP >= 1100 uses set, older uses clr)
+
 ### 1.0.3 (2025-07-12)
 
 - fix device list for different api version

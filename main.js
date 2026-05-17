@@ -187,7 +187,7 @@ class Syrconnectapp extends utils.Adapter {
         }
 
         this.log.info(`Found ${deviceArray.length} devices in project ${projectId}`);
-        for (let device of deviceArray) {
+        for (const device of deviceArray) {
           // Handle the device attributes properly
           const deviceAttrs = device._attributes || device;
           const id = deviceAttrs.dclg;
@@ -435,14 +435,25 @@ class Syrconnectapp extends utils.Adapter {
           this.updateDevices();
           return;
         }
-        //n="setAB" v="1"
+
         let value = state.val;
         if (state.val === true || state.val === false) {
           value = state.val ? 1 : 0;
         }
 
         command = command.replace('get', 'set');
-        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${deviceId}" fref="1"><c n="${command}" v="${value}" /></dcl></col></sc>`;
+
+        let commands = `<c n="${command}" v="${value}" />`;
+
+        if (command === 'setAB' && String(value) === '1') {
+          const alarmClearCmd = await this.buildAlarmClearCommand(projectId, deviceId);
+          if (alarmClearCmd) {
+            commands = alarmClearCmd + commands;
+            this.log.info('Alarm active - sending alarm clear before opening valve');
+          }
+        }
+
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${deviceId}" fref="1">${commands}</dcl></col></sc>`;
         this.checksum.resetChecksum();
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
@@ -493,6 +504,33 @@ class Syrconnectapp extends utils.Adapter {
           });
       }
     }
+  }
+
+  async buildAlarmClearCommand(projectId, deviceId) {
+    const basePath = `${this.namespace}.${projectId}.${deviceId}.status.col.dcl`;
+
+    const alaState = await this.getStateAsync(`${basePath}.getALA`);
+    const almState = await this.getStateAsync(`${basePath}.getALM`);
+
+    const alaActive = alaState && alaState.val && String(alaState.val) !== '0' && String(alaState.val) !== '';
+    const almActive = almState && almState.val && String(almState.val) !== '0' && String(almState.val) !== '';
+
+    if (!alaActive && !almActive) {
+      return null;
+    }
+
+    const typState = await this.getStateAsync(`${basePath}.getTYP`);
+    const deviceType = typState && typState.val ? parseInt(String(typState.val), 10) : 0;
+    const useSetMethod = deviceType >= 1100;
+
+    const alarmType = alaActive ? 'ALA' : 'ALM';
+
+    if (useSetMethod) {
+      this.log.debug(`Device type ${deviceType} >= 1100, using set${alarmType} v="FF"`);
+      return `<c n="set${alarmType}" v="FF" />`;
+    }
+    this.log.debug(`Device type ${deviceType} < 1100, using clr${alarmType}`);
+    return `<c n="clr${alarmType}" v="" />`;
   }
 }
 
