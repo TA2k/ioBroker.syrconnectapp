@@ -53,6 +53,7 @@ to set the profile to absence or present
 
 - Fix: Alarm acknowledge before opening valve (send clrALA/setALA together with setAB in one request)
 - Auto-detect alarm clear method based on device type (getTYP >= 1100 uses set, older uses clr)
+- Auto-detect correct statistics endpoint based on device type (SafeT, LexPlus, SafeTech, TrioLs, NeoSoft, MuCo, etc.)
 
 ### 1.0.3 (2025-07-12)
 
