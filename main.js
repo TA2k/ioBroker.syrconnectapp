@@ -192,7 +192,7 @@ class Syrconnectapp extends utils.Adapter {
           const deviceAttrs = device._attributes || device;
           const id = deviceAttrs.dclg;
 
-          this.deviceArray.push({ id: deviceAttrs.dclg, pg: projectId });
+          this.deviceArray.push({ id: deviceAttrs.dclg, pg: projectId, dk: parseInt(deviceAttrs.dk) || 0 });
           const name = deviceAttrs.dfw;
 
           await this.extendObject(projectId + '.' + id, {
@@ -311,7 +311,7 @@ class Syrconnectapp extends utils.Adapter {
     for (const device of this.deviceArray) {
       this.log.debug('Get Statistics device: ' + device.id);
 
-      const statsConfig = await this.getStatisticsConfig(device);
+      const statsConfig = this.getStatisticsConfig(device);
       if (!statsConfig) {
         this.log.debug('No statistics config for device: ' + device.id);
         continue;
@@ -378,18 +378,17 @@ class Syrconnectapp extends utils.Adapter {
       }
     }
   }
-  async getStatisticsConfig(device) {
-    const basePath = `${this.namespace}.${device.pg}.${device.id}.status.col.dcl`;
-    const typState = await this.getStateAsync(`${basePath}.getTYP`);
-    const deviceType = typState && typState.val ? parseInt(String(typState.val), 10) : 0;
+  getStatisticsConfig(device) {
+    const dk = device.dk || 0;
+    this.log.debug(`Device ${device.id} has dk=${dk}`);
 
-    if (deviceType >= 1500) {
+    if (dk >= 1500) {
       return {
         url: 'GetMuCoStatistics',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
       };
     }
-    if (deviceType >= 1200) {
+    if (dk >= 1200) {
       return {
         url: 'GetNeoSoftStatistics',
         payloads: [
@@ -398,13 +397,13 @@ class Syrconnectapp extends utils.Adapter {
         ],
       };
     }
-    if (deviceType >= 1100) {
+    if (dk >= 1100) {
       return {
         url: 'GetTrioLsStatistics',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
       };
     }
-    if (deviceType >= 190) {
+    if (dk >= 190) {
       return {
         url: 'GetDosingPumpStatistics',
         payloads: [
@@ -413,25 +412,25 @@ class Syrconnectapp extends utils.Adapter {
         ],
       };
     }
-    if (deviceType >= 180) {
+    if (dk >= 180) {
       return {
         url: 'GetHygBoxStatistics',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
       };
     }
-    if (deviceType >= 160) {
+    if (dk >= 160) {
       return {
         url: 'GetAllInOnePlusStatistics',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
       };
     }
-    if (deviceType >= 140) {
+    if (dk >= 140) {
       return {
         url: 'GetSafeTechStatistics',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
       };
     }
-    if (deviceType >= 120) {
+    if (dk >= 120) {
       return {
         url: 'GetSafeFloorStatistics',
         payloads: [
@@ -440,7 +439,7 @@ class Syrconnectapp extends utils.Adapter {
         ],
       };
     }
-    if (deviceType >= 80) {
+    if (dk >= 80) {
       return {
         url: 'GetLexPlusStatistics',
         payloads: [
@@ -449,7 +448,7 @@ class Syrconnectapp extends utils.Adapter {
         ],
       };
     }
-    if (deviceType >= 40) {
+    if (dk >= 40) {
       return {
         url: 'https://syrconnect.de/WebServices/SyrConnectLimexWebService.asmx/GetSaltConsumption',
         payloads: [
@@ -458,7 +457,7 @@ class Syrconnectapp extends utils.Adapter {
         ],
       };
     }
-    if (deviceType >= 20) {
+    if (dk >= 20) {
       return {
         url: 'GetFillingVolumeConsumption',
         payloads: [{ name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' }],
@@ -613,17 +612,17 @@ class Syrconnectapp extends utils.Adapter {
       return null;
     }
 
-    const typState = await this.getStateAsync(`${basePath}.getTYP`);
-    const deviceType = typState && typState.val ? parseInt(String(typState.val), 10) : 0;
-    const useSetMethod = deviceType >= 1100;
+    const device = this.deviceArray.find((d) => d.id === deviceId);
+    const dk = device ? device.dk : 0;
+    const useSetMethod = dk >= 1100;
 
     const alarmType = alaActive ? 'ALA' : 'ALM';
 
     if (useSetMethod) {
-      this.log.debug(`Device type ${deviceType} >= 1100, using set${alarmType} v="FF"`);
+      this.log.debug(`Device dk=${dk} >= 1100, using set${alarmType} v="FF"`);
       return `<c n="set${alarmType}" v="FF" />`;
     }
-    this.log.debug(`Device type ${deviceType} < 1100, using clr${alarmType}`);
+    this.log.debug(`Device dk=${dk} < 1100, using clr${alarmType}`);
     return `<c n="clr${alarmType}" v="" />`;
   }
 }
