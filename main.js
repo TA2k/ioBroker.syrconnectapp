@@ -600,30 +600,30 @@ class Syrconnectapp extends utils.Adapter {
   }
 
   async buildAlarmClearCommand(projectId, deviceId) {
+    const device = this.deviceArray.find((d) => d.id === deviceId);
+    const dk = device ? device.dk : 0;
+
+    const useAlmField = dk === 40 || dk === 80;
+    const fieldName = useAlmField ? 'ALM' : 'ALA';
+
     const basePath = `${this.namespace}.${projectId}.${deviceId}.status.col.dcl`;
-
-    const alaState = await this.getStateAsync(`${basePath}.getALA`);
-    const almState = await this.getStateAsync(`${basePath}.getALM`);
-
-    const alaActive = alaState && alaState.val && String(alaState.val) !== '0' && String(alaState.val) !== '';
-    const almActive = almState && almState.val && String(almState.val) !== '0' && String(almState.val) !== '';
-
-    if (!alaActive && !almActive) {
+    const alarmState = await this.getStateAsync(`${basePath}.get${fieldName}`);
+    if (!alarmState || !alarmState.val) {
+      return null;
+    }
+    const alarmValue = String(alarmState.val).trim().toLowerCase();
+    const noAlarmValues = ['', '0', '00', '0000', 'ff', 'a0x0000'];
+    if (noAlarmValues.includes(alarmValue)) {
       return null;
     }
 
-    const device = this.deviceArray.find((d) => d.id === deviceId);
-    const dk = device ? device.dk : 0;
     const useSetMethod = dk >= 1100;
-
-    const alarmType = alaActive ? 'ALA' : 'ALM';
-
     if (useSetMethod) {
-      this.log.debug(`Device dk=${dk} >= 1100, using set${alarmType} v="FF"`);
-      return `<c n="set${alarmType}" v="FF" />`;
+      this.log.debug(`Device dk=${dk}, using set${fieldName} v="FF"`);
+      return `<c n="set${fieldName}" v="FF" />`;
     }
-    this.log.debug(`Device dk=${dk} < 1100, using clr${alarmType}`);
-    return `<c n="clr${alarmType}" v="" />`;
+    this.log.debug(`Device dk=${dk}, using clr${fieldName}`);
+    return `<c n="clr${fieldName}" v="" />`;
   }
 }
 
