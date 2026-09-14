@@ -51,6 +51,15 @@ class Syrconnectapp extends utils.Adapter {
       return;
     }
 
+    // Backend selection: SYR Connect and Conel CLEAR PRO share the same API (svcPath, crypto),
+    // but differ in host and app name (see the respective app config).
+    const backends = {
+      syr: { host: 'syrconnect.de', appName: 'SYR Connect', pkg: 'de.consoft.syr.connect' },
+      conel: { host: 'api.conelclearpro.de', appName: 'CLEAR PRO', pkg: 'de.consoft.gc.conel.connect' },
+    };
+    this.backend = backends[this.config.backend] || backends.syr;
+    this.log.info(`Using backend ${this.backend.host}`);
+
     this.updateInterval = null;
     this.session = {};
     this.subscribeStates('*');
@@ -76,11 +85,11 @@ class Syrconnectapp extends utils.Adapter {
   async getProjects() {
     //create timestamp format YYYY-MM-DD HH:MM:SS
     const timestamp = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
-    const payload = `<nfo v="SYR Connect" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
+    const payload = `<nfo v="${this.backend.appName}" version="3.7.10" osv="15.8.3" os="iOS" dn="iPhone" ts="${timestamp}" tzo="01:00:00" lng="de" reg="DE" /><usr n="${this.config.username}" v="${this.config.password}" />`;
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://syrconnect.de/WebServices/Api/SyrApiService.svc/REST/GetProjects',
+      url: `https://${this.backend.host}/WebServices/Api/SyrApiService.svc/REST/GetProjects`,
       headers: {
         'Content-Type': 'text/xml',
         Connection: 'keep-alive',
@@ -103,9 +112,21 @@ class Syrconnectapp extends utils.Adapter {
         });
         const parsedJSON = JSON.parse(convertedJson);
         this.log.debug(JSON.stringify(parsedJSON));
+        // Server rejects the login without a usr node (e.g. wrong credentials or account on a different backend)
+        if (!parsedJSON.xml || !parsedJSON.xml.usr) {
+          const msg = parsedJSON.xml && parsedJSON.xml.msg && parsedJSON.xml.msg._attributes;
+          this.log.error(
+            `Login abgelehnt${msg ? `: ${msg.hl} - ${msg.v}` : ''}. Bitte Benutzername/Passwort prüfen bzw. ob das Konto auf ${this.backend.host} gültig ist.`,
+          );
+          this.setState('info.connection', false, true);
+          return;
+        }
         this.session = parsedJSON.xml.usr._attributes;
         this.setState('info.connection', true, true);
-        // this.log.info(`Found ${json.prs} devices`);
+        if (!parsedJSON.xml.prs || !parsedJSON.xml.prs.pre) {
+          this.log.info('Found 0 projects');
+          return;
+        }
         // if (Array.isArray(json.prs.pre)) {
         // test if pre is an array
         let projectArray = parsedJSON.xml.prs.pre;
@@ -136,7 +157,7 @@ class Syrconnectapp extends utils.Adapter {
       });
   }
   async getDeviceList(projectId) {
-    let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs></sc>`;
+    let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-${this.backend.pkg}" /><us ug="${this.session.id}" /><prs><pr pg="${projectId}" /></prs></sc>`;
     this.checksum.resetChecksum();
     this.checksum.addXmlToChecksum(payload);
     const checksum = this.checksum.getChecksum();
@@ -144,9 +165,9 @@ class Syrconnectapp extends utils.Adapter {
     await this.requestClient({
       method: 'post',
       maxBodyLength: Infinity,
-      url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetProjectDeviceCollections',
+      url: `https://${this.backend.host}/WebServices/SyrControlWebServiceTest2.asmx/GetProjectDeviceCollections`,
       headers: {
-        Host: 'syrconnect.de',
+        Host: this.backend.host,
         'Content-Type': 'application/x-www-form-urlencoded',
         Connection: 'keep-alive',
         Accept: '*/*',
@@ -251,7 +272,7 @@ class Syrconnectapp extends utils.Adapter {
   async updateDevices() {
     for (const device of this.deviceArray) {
       this.log.debug('Update device: ' + device.id);
-      let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}" fref="1" /></col></sc>`;
+      let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-${this.backend.pkg}" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}" fref="1" /></col></sc>`;
       this.checksum.resetChecksum();
       this.checksum.addXmlToChecksum(payload);
       const checksum = this.checksum.getChecksum();
@@ -259,9 +280,9 @@ class Syrconnectapp extends utils.Adapter {
       await this.requestClient({
         method: 'post',
         maxBodyLength: Infinity,
-        url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus',
+        url: `https://${this.backend.host}/WebServices/SyrControlWebServiceTest2.asmx/GetDeviceCollectionStatus`,
         headers: {
-          Host: 'syrconnect.de',
+          Host: this.backend.host,
           'Content-Type': 'application/x-www-form-urlencoded',
           Connection: 'keep-alive',
           Accept: '*/*',
@@ -306,7 +327,7 @@ class Syrconnectapp extends utils.Adapter {
     }
   }
   async getStatistics() {
-    const baseUrl = 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/';
+    const baseUrl = `https://${this.backend.host}/WebServices/SyrControlWebServiceTest2.asmx/`;
 
     for (const device of this.deviceArray) {
       this.log.debug('Get Statistics device: ' + device.id);
@@ -318,7 +339,7 @@ class Syrconnectapp extends utils.Adapter {
       }
 
       for (const stat of statsConfig.payloads) {
-        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}">${stat.sh}</dcl></col></sc>`;
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-${this.backend.pkg}" /><us ug="${this.session.id}" /><col><dcl dclg="${device.id}">${stat.sh}</dcl></col></sc>`;
         this.checksum.resetChecksum();
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
@@ -328,7 +349,7 @@ class Syrconnectapp extends utils.Adapter {
           maxBodyLength: Infinity,
           url: statsConfig.url.startsWith('http') ? statsConfig.url : baseUrl + statsConfig.url,
           headers: {
-            Host: 'syrconnect.de',
+            Host: this.backend.host,
             'Content-Type': 'application/x-www-form-urlencoded',
             Connection: 'keep-alive',
             Accept: '*/*',
@@ -450,7 +471,7 @@ class Syrconnectapp extends utils.Adapter {
     }
     if (dk >= 40) {
       return {
-        url: 'https://syrconnect.de/WebServices/SyrConnectLimexWebService.asmx/GetSaltConsumption',
+        url: `https://${this.backend.host}/WebServices/SyrConnectLimexWebService.asmx/GetSaltConsumption`,
         payloads: [
           { name: 'Wasser', sh: '<sh t="1" rtyp="1" lg="de" rg="DE" unit="l" />' },
           { name: 'Salz', sh: '<sh t="2" rtyp="1" lg="de" rg="DE" unit="kg" />' },
@@ -546,7 +567,7 @@ class Syrconnectapp extends utils.Adapter {
           }
         }
 
-        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-de.consoft.syr.connect" /><us ug="${this.session.id}" /><col><dcl dclg="${deviceId}" fref="1">${commands}</dcl></col></sc>`;
+        let payload = `<?xml version="1.0" encoding="utf-8"?><sc><si v="App-3.7.10-de-DE-iOS-iPhone-15.8.3-${this.backend.pkg}" /><us ug="${this.session.id}" /><col><dcl dclg="${deviceId}" fref="1">${commands}</dcl></col></sc>`;
         this.checksum.resetChecksum();
         this.checksum.addXmlToChecksum(payload);
         const checksum = this.checksum.getChecksum();
@@ -556,9 +577,9 @@ class Syrconnectapp extends utils.Adapter {
         await this.requestClient({
           method: 'post',
           maxBodyLength: Infinity,
-          url: 'https://syrconnect.de/WebServices/SyrControlWebServiceTest2.asmx/SetDeviceCollectionStatus',
+          url: `https://${this.backend.host}/WebServices/SyrControlWebServiceTest2.asmx/SetDeviceCollectionStatus`,
           headers: {
-            Host: 'syrconnect.de',
+            Host: this.backend.host,
             'Content-Type': 'application/x-www-form-urlencoded',
             Connection: 'keep-alive',
             Accept: '*/*',

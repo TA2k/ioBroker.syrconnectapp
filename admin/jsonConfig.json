@@ -2,6 +2,23 @@
   "type": "panel",
   "i18n": false,
   "items": {
+    "backend": {
+      "type": "select",
+      "newLine": true,
+      "xs": 12,
+      "sm": 12,
+      "md": 6,
+      "lg": 3,
+      "xl": 3,
+      "options": [
+        { "value": "syr", "label": "SYR Connect (syrconnect.de)" },
+        { "value": "conel", "label": "Conel CLEAR PRO (api.conelclearpro.de)" }
+      ],
+      "label": {
+        "en": "Backend / App",
+        "de": "Backend / App"
+      }
+    },
     "username": {
       "type": "text",
       "label": {

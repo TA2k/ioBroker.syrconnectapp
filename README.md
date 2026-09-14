@@ -49,6 +49,11 @@ to set the profile to absence or present
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+
+- Add backend selection (SYR Connect / Conel CLEAR PRO) - Conel accounts use api.conelclearpro.de
+- Fix: handle rejected login gracefully instead of throwing (log server message, no TypeError)
+
 ### 1.0.4 (2026-05-17)
 
 - Fix: Alarm acknowledge before opening valve (send clrALA/setALA together with setAB in one request)
